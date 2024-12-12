@@ -1,0 +1,155 @@
+/* General Styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto", sans-serif;
+  background: #f4f4f9;
+  color: #333;
+}
+img {
+  width: 100%;
+}
+.container {
+  max-width: 1024px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+header p {
+  font-size: 1.2rem;
+  color: #888;
+}
+
+/* Search Section */
+.search-section {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.search-section input {
+  padding: 10px 15px;
+  font-size: 1rem;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  outline: none;
+  width: 70%;
+}
+
+.search-section button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  color: #fff;
+  background: #4caf50;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.search-section button:hover {
+  background: #45a049;
+}
+
+/* Filters Section */
+.filters {
+  margin: 20px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.filters select {
+  padding: 8px;
+  font-size: 1rem;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+/* Results Section */
+/* Results Section */
+#results {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Book Card */
+.book {
+  background: #fafafa;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.book h2 {
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.book p {
+  line-height: 1.5;
+  margin: 10px 0;
+}
+
+.book a {
+  color: #4caf50;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.book a:hover {
+  color: #45a049;
+}
+
+.short-description {
+  font-size: 1rem;
+  color: #888;
+}
+
+.full-details {
+  margin-top: 10px;
+  background: #fafafa;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  #results {
+    grid-template-columns: 1fr; /* Single column layout on small screens */
+  }
+
+  .search-section {
+    flex-direction: column;
+  }
+
+  .search-section input,
+  .search-section button {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters select {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
