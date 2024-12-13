@@ -1,42 +1,50 @@
-// Fetch the JSON data
-let books = [];
+// Function to fetch books from Google Books API
+async function fetchBooks(query) {
+  const apiUrl = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=20`;
+  try {
+    const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error("Failed to fetch books.");
+    const data = await response.json();
+    return data.items || [];
+  } catch (error) {
+    console.error("Error fetching books:", error);
+    return [];
+  }
+}
 
-// Sample data fetch (replace with actual API call or local JSON)
-fetch("data.json")
-  .then((response) => response.json())
-  .then((data) => {
-    books = data; // Store the book data
-    populateFilters(); // Populate filters dynamically
-  })
-  .catch((error) => console.error("Error loading data:", error));
+// Populate filters dynamically
+async function populateFilters(books) {
+  const genres = new Set();
+  const years = new Set();
 
-// Populate genre and year filters dynamically
-function populateFilters() {
-  const genres = [...new Set(books.map((book) => book.categories))]; // Get unique genres
-  const years = [...new Set(books.map((book) => book.published_year))]; // Get unique years
+  books.forEach((book) => {
+    const bookInfo = book.volumeInfo;
+    if (bookInfo.categories) genres.add(...bookInfo.categories);
+    if (bookInfo.publishedDate) years.add(bookInfo.publishedDate.split("-")[0]);
+  });
 
-  const genreSelect = document.getElementById("genreFilter");
+  // Populate genre filter
+  const genreFilter = document.getElementById("genreFilter");
   genres.forEach((genre) => {
     const option = document.createElement("option");
     option.value = genre;
     option.textContent = genre;
-    genreSelect.appendChild(option);
+    genreFilter.appendChild(option);
   });
 
-  const yearSelect = document.getElementById("yearFilter");
-  years.forEach((year) => {
+  // Populate year filter
+  const yearFilter = document.getElementById("yearFilter");
+  [...years].sort().forEach((year) => {
     const option = document.createElement("option");
     option.value = year;
     option.textContent = year;
-    yearSelect.appendChild(option);
+    yearFilter.appendChild(option);
   });
 }
 
 // Search and recommend books
-document.getElementById("searchBtn").addEventListener("click", () => {
-  const searchInput = document
-    .getElementById("searchInput")
-    .value.toLowerCase();
+document.getElementById("searchBtn").addEventListener("click", async () => {
+  const searchInput = document.getElementById("searchInput").value.trim();
   const genreFilter = document.getElementById("genreFilter").value;
   const ratingFilter = parseFloat(
     document.getElementById("ratingFilter").value
@@ -46,17 +54,26 @@ document.getElementById("searchBtn").addEventListener("click", () => {
   const resultsDiv = document.getElementById("results");
   resultsDiv.innerHTML = ""; // Clear previous results
 
-  // Filter books based on user input
+  if (!searchInput) {
+    resultsDiv.innerHTML = `<p>Please enter a search term.</p>`;
+    return;
+  }
+
+  const books = await fetchBooks(searchInput);
+  await populateFilters(books);
+
   const filteredBooks = books.filter((book) => {
-    const matchesSearch = book.title.toLowerCase().includes(searchInput);
+    const bookInfo = book.volumeInfo;
     const matchesGenre = genreFilter
-      ? book.categories.includes(genreFilter)
+      ? bookInfo.categories?.includes(genreFilter)
       : true;
     const matchesRating = ratingFilter
-      ? book.average_rating >= ratingFilter
+      ? bookInfo.averageRating >= ratingFilter
       : true;
-    const matchesYear = yearFilter ? book.published_year == yearFilter : true;
-    return matchesSearch && matchesGenre && matchesRating && matchesYear;
+    const matchesYear = yearFilter
+      ? bookInfo.publishedDate?.startsWith(yearFilter)
+      : true;
+    return matchesGenre && matchesRating && matchesYear;
   });
 
   if (filteredBooks.length > 0) {
@@ -64,48 +81,29 @@ document.getElementById("searchBtn").addEventListener("click", () => {
       resultsDiv.innerHTML += createBookCard(book);
     });
   } else {
-    resultsDiv.innerHTML = `<p>No books found based on the selected filters. Try different criteria.</p>`;
+    resultsDiv.innerHTML = `<p>No books found. Try different filters.</p>`;
   }
 });
 
-// Function to create a book card with only required details
-function createBookCard(book) {
+// Function to create a book card
+function createBookCard(bookInfo) {
+  const book = bookInfo?.volumeInfo;
+  const bookId = bookInfo?.id;
+  const thumbnail =
+    book?.imageLinks?.thumbnail ||
+    "https://via.placeholder.com/128x192?text=No+Image";
+  const authors = book?.authors ? book?.authors?.join(", ") : "Unknown Author";
+  const categories = book.categories
+    ? book.categories.join(", ")
+    : "Uncategorized";
   return `
-    <div class="book" data-id="${book.isbn13}">
-      <h2>${book.title} by ${book.authors}</h2>
-      <img src="${book.thumbnail}" alt="${
-    book.title
-  } thumbnail" class="book-thumbnail"/>
-      <p><strong>Category:</strong> ${book.categories}</p>
-      <p><strong>Published Year:</strong> ${book.published_year}</p>
-      <p><strong>Rating:</strong> ${book.average_rating}</p>
-      <p><strong>Pages:</strong> ${book.num_pages}</p>
-      <p><strong>Ratings Count:</strong> ${book.ratings_count}</p>
-      <p class="short-description">${book.description.slice(
-        0,
-        100
-      )}... <a href="#" class="more-link">More</a></p>
-      <div class="full-details" style="display: none;">
-        <p><strong>Description:</strong> ${book.description}</p>
-        <p><strong>ISBN-13:</strong> ${book.isbn13}</p>
-        <p><strong>ISBN-10:</strong> ${book.isbn10}</p>
-      </div>
+    <div class="book">
+      <h2><a href="book-detail.html?id=${bookId}">${book.title}</a></h2>
+      <img src="${thumbnail}" alt="${book.title} thumbnail"/>
+      <p><strong>Authors:</strong> ${authors}</p>
+      <p><strong>Categories:</strong> ${categories}</p>
+      <p><strong>Published:</strong> ${book.publishedDate || "Unknown"}</p>
+      <p><strong>Rating:</strong> ${book.averageRating || "Not Rated"}</p>
     </div>
   `;
-}
-
-// Function to toggle details
-function toggleDetails(event) {
-  event.preventDefault();
-  const bookCard = event.target.closest(".book");
-  const shortDescription = bookCard.querySelector(".short-description");
-  const fullDetails = bookCard.querySelector(".full-details");
-
-  if (fullDetails.style.display === "none") {
-    fullDetails.style.display = "block";
-    shortDescription.style.display = "none";
-  } else {
-    fullDetails.style.display = "none";
-    shortDescription.style.display = "block";
-  }
 }
